@@ -8,21 +8,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/attendance")
+@RequestMapping("/api/canteen/{canteenId}/attendance")
 public class AttendanceController {
 
     @Autowired
     private AttendanceService attendanceService;
 
-    // Mark attendance for a worker (basic)
     static class AttendanceRequest {
         public String workerId;
         public String status; // PRESENT/ABSENT
     }
 
     @PostMapping
-    public Attendance mark(@RequestBody AttendanceRequest req) {
-        return attendanceService.markAttendance(req.workerId, req.status);
+    public Attendance mark(@PathVariable String canteenId, @RequestBody AttendanceRequest req) {
+        return attendanceService.markAttendance(canteenId, req.workerId, req.status);
     }
 
+    @GetMapping
+    public List<Attendance> getAttendance(@PathVariable String canteenId) {
+        return attendanceService.getAttendanceByCanteen(canteenId);
+    }
 }

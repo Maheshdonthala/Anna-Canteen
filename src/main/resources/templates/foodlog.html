@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Log</title>
+    <link rel="stylesheet" href="/style.css">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
+</head>
+<body>
+    <div class="container">
+        <h1>Food Log for Canteen: <span id="canteenName"></span></h1>
+        <p>Date: <span id="currentDate"></span></p>
+
+        <div class="dashboard">
+            <h2>Daily Stats</h2>
+            <p>Total Plates Bought: <span id="totalBought">0</span></p>
+            <p>Total Plates Sold: <span id="totalSold">0</span></p>
+            <p>Remaining Plates: <span id="remainingPlates">0</span></p>
+            <p>Total Sales: ₹<span id="totalSales">0.00</span></p>
+        </div>
+
+        <div class="food-log-forms">
+            <div id="morning-log">
+                <h3>Morning</h3>
+                <form id="morning-purchase-form">
+                    <input type="number" id="morning-purchase-plates" placeholder="Plates to Purchase" min="1" required>
+                    <button type="submit">Record Purchase</button>
+                </form>
+                <form id="morning-sale-form">
+                    <input type="number" id="morning-sale-plates" placeholder="Plates to Sell" min="1" required>
+                    <button type="submit">Record Sale</button>
+                </form>
+            </div>
+            <div id="afternoon-log">
+                <h3>Afternoon</h3>
+                <form id="afternoon-purchase-form">
+                    <input type="number" id="afternoon-purchase-plates" placeholder="Plates to Purchase" min="1" required>
+                    <button type="submit">Record Purchase</button>
+                </form>
+                <form id="afternoon-sale-form">
+                    <input type="number" id="afternoon-sale-plates" placeholder="Plates to Sell" min="1" required>
+                    <button type="submit">Record Sale</button>
+                </form>
+            </div>
+            <div id="evening-log">
+                <h3>Evening</h3>
+                <form id="evening-purchase-form">
+                    <input type="number" id="evening-purchase-plates" placeholder="Plates to Purchase" min="1" required>
+                    <button type="submit">Record Purchase</button>
+                </form>
+                <form id="evening-sale-form">
+                    <input type="number" id="evening-sale-plates" placeholder="Plates to Sell" min="1" required>
+                    <button type="submit">Record Sale</button>
+                </form>
+            </div>
+        </div>
+        <a href="/canteens">Back to Canteens</a>
+    </div>
+    <script src="/app.js"></script>
+</body>
+</html>

@@ -9,8 +9,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Salary {
     @Id
     private String id;
+    private String canteenId;
     private String workerId;
-    private String month;
+    private String workerName; // For display purposes
+    private int month;
     private int year;
     private String status; // e.g., "PAID", "PENDING"
 }

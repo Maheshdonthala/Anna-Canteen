@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Canteen Management</title>
     <link rel="stylesheet" href="/style.css">
-    <!-- CSRF token for AJAX requests -->
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <!-- CSRF token for AJAX requests (guarded) -->
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}" />
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}" />
 </head>
 <body>
     <header class="site-header">

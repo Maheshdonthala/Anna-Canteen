@@ -11,7 +11,9 @@ import java.time.LocalDate;
 public class Attendance {
     @Id
     private String id;
+    private String canteenId;
     private String workerId;
+    private String workerName;
     private LocalDate date;
     private String status; // e.g., "PRESENT", "ABSENT"
 }

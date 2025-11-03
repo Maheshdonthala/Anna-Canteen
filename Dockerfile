@@ -8,6 +8,9 @@ WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
 
+# Ensure the mvnw wrapper is executable (Windows git clients may strip exec bit)
+RUN chmod +x ./mvnw || true
+
 # Pre-download dependencies (uses mvnw inside the container)
 RUN ./mvnw -B -DskipTests dependency:go-offline
 

@@ -7,4 +7,3 @@ target
 *.tmp
 node_modules
 *.iml
-/.mvn/wrapper/maven-wrapper.jar

@@ -1,10 +1,12 @@
 package com.jsp.canteen_management_system.service;
 
 import com.jsp.canteen_management_system.dto.DashboardStats;
+import com.jsp.canteen_management_system.model.Canteen;
 import com.jsp.canteen_management_system.model.FoodLog;
 import com.jsp.canteen_management_system.repository.AttendanceRepository;
 import com.jsp.canteen_management_system.repository.FoodLogRepository;
 import com.jsp.canteen_management_system.repository.SalaryRepository;
+import com.jsp.canteen_management_system.repository.CanteenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ public class DashboardService {
     @Autowired
     private SalaryRepository salaryRepository;
 
+    @Autowired
+    private CanteenRepository canteenRepository;
+
     public DashboardStats getDashboardStats() {
         DashboardStats stats = new DashboardStats();
 
@@ -37,13 +42,16 @@ public class DashboardService {
 
     private double calculateTodaySales() {
         LocalDate today = LocalDate.now();
-        LocalDateTime start = today.atStartOfDay();
-        LocalDateTime end = today.atTime(LocalTime.MAX);
+        List<FoodLog> logs = foodLogRepository.findAll().stream()
+                .filter(log -> log.getDate() != null && log.getDate().equals(today))
+                .toList();
 
-        List<FoodLog> logs = foodLogRepository.findByTimestampBetween(start, end);
         double total = 0.0;
         for (FoodLog log : logs) {
-            total += log.getPlatesSold() * log.getPricePerPlate();
+            Canteen canteen = canteenRepository.findById(log.getCanteenId()).orElse(null);
+            if (canteen != null) {
+                total += log.getPlatesSold() * canteen.getDefaultPlatePrice();
+            }
         }
         return total;
     }

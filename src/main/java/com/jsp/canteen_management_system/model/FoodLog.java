@@ -6,17 +6,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.jsp.canteen_management_system.enums.MealType;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Document(collection = "food_logs")
 @Data
 public class FoodLog {
     @Id
     private String id;
-    private LocalDateTime timestamp;
-    private int platesSold;
-    private int platesBought; // number of plates bought/produced for the meal (inventory in)
-    private double pricePerPlate;
-    private MealType mealType; 
     private String canteenId;
+    private LocalDate date;
+    private MealType mealType;
+    private int platesProduced = 0;
+    private int platesSold = 0;
 }

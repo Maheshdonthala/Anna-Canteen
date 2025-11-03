@@ -13,7 +13,7 @@ if (document.getElementById('attendanceForm')) {
   const canteenId = path[2];
   async function loadWorkers() {
     try {
-      const res = await fetch('/api/workers');
+      const res = await fetch(`/api/canteen/${canteenId}/workers`);
       if (!res.ok) return;
       const workers = await res.json();
       const sel = document.getElementById('workerSelect');
@@ -30,7 +30,7 @@ if (document.getElementById('attendanceForm')) {
     const form = document.getElementById('workerForm');
     if (!container || !form) return;
     try {
-      const res = await fetch('/api/workers');
+      const res = await fetch(`/api/canteen/${canteenId}/workers`);
       if (!res.ok) { container.textContent = '(failed to load)'; return; }
       const list = await res.json();
       container.innerHTML = '';
@@ -50,7 +50,7 @@ if (document.getElementById('attendanceForm')) {
           const csrf = await getCsrf();
           const headers = {};
           if (csrf.token && csrf.header) headers[csrf.header] = csrf.token;
-          const r = await fetch('/api/workers/' + w.id, { method: 'DELETE', headers });
+          const r = await fetch(`/api/canteen/${canteenId}/workers/${w.id}`, { method: 'DELETE', headers });
           if (r.ok) { renderWorkerManagement(); loadWorkers(); } else alert('Delete failed: '+r.status);
         });
         right.appendChild(edit); right.appendChild(document.createTextNode(' ')); right.appendChild(del);
@@ -73,9 +73,9 @@ if (document.getElementById('attendanceForm')) {
       const payload = { name, role };
       let res;
       if (id) {
-        res = await fetch('/api/workers/' + id, { method: 'PUT', headers, body: JSON.stringify(payload) });
+        res = await fetch(`/api/canteen/${canteenId}/workers/${id}`, { method: 'PUT', headers, body: JSON.stringify(payload) });
       } else {
-        res = await fetch('/api/workers', { method: 'POST', headers, body: JSON.stringify(payload) });
+        res = await fetch(`/api/canteen/${canteenId}/workers`, { method: 'POST', headers, body: JSON.stringify(payload) });
       }
       if (res.ok) {
         document.getElementById('workerForm').reset();
@@ -98,7 +98,7 @@ if (document.getElementById('attendanceForm')) {
   }
 
   async function loadAttendanceList() {
-    const res = await fetch(`/api/attendance/recent`);
+    const res = await fetch(`/api/canteen/${canteenId}/attendance`);
     if (!res.ok) { document.getElementById('attendanceList').textContent = '(failed to load)'; return; }
     const list = await res.json();
     const container = document.getElementById('attendanceList');
@@ -121,16 +121,23 @@ if (document.getElementById('attendanceForm')) {
     const csrf = await getCsrf();
     const headers = {'Content-Type':'application/json'};
     if (csrf.token && csrf.header) headers[csrf.header] = csrf.token;
-    const res = await fetch('/api/attendance', { method:'POST', headers, body: JSON.stringify({ workerId, status }) });
-    if (res.ok) alert('Attendance recorded'); else alert('Failed: '+res.status);
+    const res = await fetch(`/api/canteen/${canteenId}/attendance`, { method:'POST', headers, body: JSON.stringify({ workerId, status }) });
+    if (res.ok) {
+      alert('Attendance recorded');
+      loadAttendanceList();
+    } else {
+      alert('Failed: '+res.status);
+    }
   });
 }
 
 // Salary page
 if (document.getElementById('markSalaryForm')) {
+  const path = window.location.pathname.split('/');
+  const canteenId = path[2];
   async function loadSalaryWorkers() {
     try {
-      const res = await fetch('/api/workers');
+      const res = await fetch(`/api/canteen/${canteenId}/workers`);
       if (!res.ok) return;
       const workers = await res.json();
       const sel = document.getElementById('salaryWorkerSelect');
@@ -140,7 +147,7 @@ if (document.getElementById('markSalaryForm')) {
   }
 
   async function renderSalaryList(status) {
-    const res = await fetch(`/api/salaries/status/${status}`);
+    const res = await fetch(`/api/canteen/${canteenId}/salaries/status/${status}`);
     if (!res.ok) { document.getElementById('salaryList').textContent = '(failed to load)'; return; }
     const list = await res.json();
     const container = document.getElementById('salaryList'); container.innerHTML = '';
@@ -163,16 +170,28 @@ if (document.getElementById('markSalaryForm')) {
     const csrf = await getCsrf();
     const headers = {'Content-Type':'application/json'};
     if (csrf.token && csrf.header) headers[csrf.header] = csrf.token;
-    // Post payload: { workerId, status }
-    const res = await fetch(`/api/salaries/mark`, { method:'POST', headers, body: JSON.stringify({ workerId, status }) });
-    if (res.ok) alert('Updated'); else alert('Failed: '+res.status);
+    const res = await fetch(`/api/canteen/${canteenId}/salaries/mark`, { method:'POST', headers, body: JSON.stringify({ workerId, status }) });
+    if (res.ok) {
+      alert('Salary status updated successfully!');
+      // Refresh the current list view
+      const currentList = document.querySelector('.btn-row .btn.active') || document.getElementById('viewPending');
+      currentList.click();
+    } else {
+      alert('Failed to update salary: ' + res.status);
+    }
   });
 
-  document.getElementById('viewPaid').addEventListener('click', async () => {
+  document.getElementById('viewPaid').addEventListener('click', async (e) => {
+    document.getElementById('viewPaid').classList.add('active');
+    document.getElementById('viewPending').classList.remove('active');
     renderSalaryList('PAID');
+    e.target.blur();
   });
-  document.getElementById('viewPending').addEventListener('click', async () => {
+  document.getElementById('viewPending').addEventListener('click', async (e) => {
+    document.getElementById('viewPending').classList.add('active');
+    document.getElementById('viewPaid').classList.remove('active');
     renderSalaryList('PENDING');
+    e.target.blur();
   });
 }
 
@@ -305,7 +324,7 @@ if (document.getElementById('content') && window.location.pathname.match(/^\/can
         return card;
       };
 
-      container.appendChild(makeCard('Food', 'Manage plates bought/sold and view daily dashboard', `/canteen/${canteenId}/food`));
+      container.appendChild(makeCard('Food Log', 'Manage plates bought/sold and view daily dashboard', `/canteen/${canteenId}/food`));
       container.appendChild(makeCard('Attendance', 'Record worker in/out times and view attendance', `/canteen/${canteenId}/attendance`));
       container.appendChild(makeCard('Salary', 'Mark salaries paid or unpaid and view lists', `/canteen/${canteenId}/salary`));
 
@@ -316,4 +335,230 @@ if (document.getElementById('content') && window.location.pathname.match(/^\/can
       if (content) content.textContent = 'Failed to load canteen details.';
     }
   })();
+}
+
+// Canteen Food Log Page
+if (document.getElementById('food-log-section')) {
+  const path = window.location.pathname.split('/');
+  const canteenId = path[2];
+
+  const mealTypeSelect = document.getElementById('meal-type');
+  const platesProducedInput = document.getElementById('plates-produced');
+  const addProducedBtn = document.getElementById('add-produced-btn');
+  const platesSoldInput = document.getElementById('plates-sold');
+  const addSoldBtn = document.getElementById('add-sold-btn');
+
+  const totalProducedSpan = document.getElementById('total-produced');
+  const totalSoldSpan = document.getElementById('total-sold');
+  const totalRevenueSpan = document.getElementById('total-revenue');
+  const foodLogBody = document.getElementById('food-log-body');
+
+  async function fetchFoodLogs() {
+    try {
+      const response = await fetch(`/api/canteens/${canteenId}/foodlogs`);
+      const foodLogs = await response.json();
+      renderFoodLogTable(foodLogs);
+    } catch (error) {
+      console.error('Error fetching food logs:', error);
+    }
+  }
+
+  async function fetchDailyStats() {
+    try {
+      const response = await fetch(`/api/canteens/${canteenId}/foodlogs/stats`);
+      const stats = await response.json();
+      totalProducedSpan.textContent = stats.totalPlatesProduced;
+      totalSoldSpan.textContent = stats.totalPlatesSold;
+      totalRevenueSpan.textContent = stats.totalSales.toFixed(2);
+    } catch (error) {
+      console.error('Error fetching daily stats:', error);
+    }
+  }
+
+  function renderFoodLogTable(foodLogs) {
+    foodLogBody.innerHTML = '';
+    foodLogs.forEach(log => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${log.mealType}</td>
+        <td>${log.platesProduced}</td>
+        <td>${log.platesSold}</td>
+      `;
+      foodLogBody.appendChild(row);
+    });
+  }
+
+  async function handleAdd(type) {
+    const mealType = mealTypeSelect.value;
+    let platesProduced = 0;
+    let platesSold = 0;
+
+    if (type === 'produced') {
+      platesProduced = parseInt(platesProducedInput.value, 10);
+      if (isNaN(platesProduced) || platesProduced <= 0) {
+        alert('Please enter a valid number of plates produced.');
+        return;
+      }
+    } else if (type === 'sold') {
+      platesSold = parseInt(platesSoldInput.value, 10);
+      if (isNaN(platesSold) || platesSold <= 0) {
+        alert('Please enter a valid number of plates sold.');
+        return;
+      }
+    }
+
+    const csrf = await getCsrf();
+    const headers = { 'Content-Type': 'application/json' };
+    if (csrf.token && csrf.header) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    try {
+      const response = await fetch(`/api/canteens/${canteenId}/foodlogs`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ mealType, platesProduced, platesSold }),
+      });
+
+      if (response.ok) {
+        platesProducedInput.value = '';
+        platesSoldInput.value = '';
+        fetchFoodLogs();
+        fetchDailyStats();
+      } else {
+        alert('Failed to save food log.');
+      }
+    } catch (error) {
+      console.error('Error saving food log:', error);
+    }
+  }
+
+  addProducedBtn.addEventListener('click', () => handleAdd('produced'));
+  addSoldBtn.addEventListener('click', () => handleAdd('sold'));
+
+  // Initial load
+  fetchFoodLogs();
+  fetchDailyStats();
+}
+
+// Food Log page (old one, migrated to use canonical API)
+if (document.getElementById('food-log-forms')) {
+  const path = window.location.pathname.split('/');
+  const canteenId = path[2];
+
+  async function getCanteenDetails() {
+    try {
+      const res = await fetch(`/api/canteens/${canteenId}`);
+      if (res.ok) {
+        const canteen = await res.json();
+        const nameEl = document.getElementById('canteenName');
+        if (nameEl) nameEl.textContent = canteen.name;
+      }
+    } catch (error) {
+      console.error('Failed to load canteen details', error);
+    }
+  }
+
+  function setCurrentDate() {
+    const dateEl = document.getElementById('currentDate');
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString();
+  }
+
+  async function updateStats() {
+    try {
+      const res = await fetch(`/api/canteens/${canteenId}/foodlogs/stats`);
+      if (res.ok) {
+        const stats = await res.json();
+        const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+        setText('totalBought', stats.totalPlatesProduced || 0);
+        setText('totalSold', stats.totalPlatesSold || 0);
+        setText('remainingPlates', (stats.totalPlatesProduced || 0) - (stats.totalPlatesSold || 0));
+        setText('totalSales', (stats.totalSales || 0).toFixed ? stats.totalSales.toFixed(2) : stats.totalSales);
+
+        // Update meal-specific stats if available
+        const mealTypes = ['MORNING', 'AFTERNOON', 'EVENING'];
+        mealTypes.forEach(meal => {
+          const bought = (stats.platesBoughtByMeal && stats.platesBoughtByMeal[meal]) || 0;
+          const sold = (stats.platesSoldByMeal && stats.platesSoldByMeal[meal]) || 0;
+          const bEl = document.getElementById(`bought-${meal.toLowerCase()}`);
+          const sEl = document.getElementById(`sold-${meal.toLowerCase()}`);
+          const rEl = document.getElementById(`remaining-${meal.toLowerCase()}`);
+          if (bEl) bEl.textContent = bought;
+          if (sEl) sEl.textContent = sold;
+          if (rEl) rEl.textContent = bought - sold;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update stats', error);
+    }
+  }
+
+  async function handleTransaction(mealType, transactionType, plates) {
+    if (plates <= 0) {
+      alert('Please enter a positive number of plates.');
+      return;
+    }
+
+    const csrf = await getCsrf();
+    const headers = { 'Content-Type': 'application/json' };
+    if (csrf.token && csrf.header) {
+      headers[csrf.header] = csrf.token;
+    }
+
+    // New API: POST /api/canteens/{id}/foodlogs with { mealType, platesProduced, platesSold }
+    const body = { mealType: mealType };
+    if (transactionType === 'purchase') body.platesProduced = plates;
+    else body.platesSold = plates;
+
+    try {
+      const res = await fetch(`/api/canteens/${canteenId}/foodlogs`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        alert(`Successfully recorded ${transactionType}.`);
+        updateStats();
+      } else {
+        const error = await res.text();
+        alert(`Failed to record ${transactionType}: ${error}`);
+      }
+    } catch (error) {
+      console.error(`Failed to record ${transactionType}`, error);
+      alert(`An error occurred while recording the ${transactionType}.`);
+    }
+  }
+
+  function setupForms() {
+    const mealTypes = ['morning', 'afternoon', 'evening'];
+    mealTypes.forEach(meal => {
+      const purchaseForm = document.getElementById(`${meal}-purchase-form`);
+      const saleForm = document.getElementById(`${meal}-sale-form`);
+
+      if (purchaseForm) {
+        purchaseForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const plates = parseInt(document.getElementById(`${meal}-purchase-plates`).value, 10);
+          handleTransaction(meal.toUpperCase(), 'purchase', plates);
+          purchaseForm.reset();
+        });
+      }
+
+      if (saleForm) {
+        saleForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const plates = parseInt(document.getElementById(`${meal}-sale-plates`).value, 10);
+          handleTransaction(meal.toUpperCase(), 'sale', plates);
+          saleForm.reset();
+        });
+      }
+    });
+  }
+
+  // Initial setup
+  getCanteenDetails();
+  setCurrentDate();
+  updateStats();
+  setupForms();
 }

@@ -30,7 +30,7 @@ public class ViewController {
 
     @GetMapping("/canteen/{id}/food")
     public String food() {
-        return "food";
+        return "foodlog";
     }
 
     @GetMapping("/canteen/{id}/attendance")

@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Worker {
     @Id
     private String id;
+    private String canteenId;
     private String name;
     private WorkerRole role; 
 }
