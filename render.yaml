@@ -5,7 +5,9 @@ services:
   - type: web
     name: anna-canteen
     env: docker
-    dockerfilePath: ./Dockerfile
+    # Explicit root directory for Render: use '.' to point to repository root
+    root: .
+    dockerfilePath: Dockerfile
     branch: main
     region: oregon
     plan: starter
