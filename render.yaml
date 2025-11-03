@@ -3,13 +3,18 @@
 
 services:
   - type: web
-    name: canteen-management-system
+    name: anna-canteen
     env: docker
     dockerfilePath: ./Dockerfile
     branch: main
     region: oregon
+    plan: starter
     autoDeploy: true
+    # Optional: health check path Render will use to determine service health
+    healthCheckPath: /actuator/health
     envVars:
+      # Replace the value below with your MongoDB connection string (Atlas or other).
+      # Example (Atlas): mongodb+srv://<user>:<password>@<cluster-url>/canteenDB?retryWrites=true&w=majority
       - key: SPRING_DATA_MONGODB_URI
         value: "<REPLACE_WITH_YOUR_MONGODB_URI>"
       - key: SPRING_PROFILES_ACTIVE
