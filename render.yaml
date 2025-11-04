@@ -5,8 +5,8 @@ services:
   - type: web
     name: anna-canteen
     env: docker
-    # Explicit root directory for Render: use '.' to point to repository root
-    root: .
+    # Optional: root directory for monorepos; default is repo root
+    rootDir: .
     dockerfilePath: Dockerfile
     branch: main
     region: oregon
