@@ -52,4 +52,22 @@ public class WorkerServiceImpl implements WorkerService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Worker not found");
         }
     }
+
+    @Override
+    public int assignLegacyWorkersToCanteen(String canteenId) {
+        // Find any workers missing canteen assignment (null or blank/whitespace)
+        List<Worker> all = workerRepository.findAll();
+        int count = 0;
+        for (Worker w : all) {
+            String cid = w.getCanteenId();
+            if (cid == null || cid.trim().isEmpty()) {
+                w.setCanteenId(canteenId);
+                count++;
+            }
+        }
+        if (count > 0) {
+            workerRepository.saveAll(all);
+        }
+        return count;
+    }
 }

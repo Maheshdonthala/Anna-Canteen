@@ -71,11 +71,11 @@
 			<groupId>de.flapdoodle.embed</groupId>
 			<artifactId>de.flapdoodle.embed.mongo.spring3x</artifactId>
 			<version>4.11.0</version>
-			<!-- Use Flapdoodle only for tests / local development. In production we disable
-			     the embedded Mongo auto-configuration so the application doesn't attempt
-			     to download and run platform-specific MongoDB binaries (which can fail
-			     on some hosted platforms). -->
-			<scope>test</scope>
+			<!-- Enable embedded Mongo for local development runtime so the app runs
+			     without needing a separate MongoDB installation. In production we
+			     disable the embedded auto-config via application-prod.properties
+			     (spring.autoconfigure.exclude=...EmbeddedMongoAutoConfiguration), so
+			     the dependency being present here will NOT start embedded Mongo in prod. -->
 		</dependency>
 	</dependencies>
 

@@ -1,63 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
     <title>Food Log</title>
-    <link rel="stylesheet" href="/style.css">
-    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
-    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
-</head>
-<body>
-    <div class="container">
-        <h1>Food Log for Canteen: <span id="canteenName"></span></h1>
-        <p>Date: <span id="currentDate"></span></p>
-
-        <div class="dashboard">
-            <h2>Daily Stats</h2>
-            <p>Total Plates Bought: <span id="totalBought">0</span></p>
-            <p>Total Plates Sold: <span id="totalSold">0</span></p>
-            <p>Remaining Plates: <span id="remainingPlates">0</span></p>
-            <p>Total Sales: ₹<span id="totalSales">0.00</span></p>
+    <link rel="stylesheet" href="/style.css" />
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}" />
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}" />
+    <script src="/app.js" defer></script>
+    <style>
+        .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .kpis { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .kpi { background:#f7f7f9; border:1px solid #e2e2e7; border-radius:8px; padding:12px; text-align:center; }
+        .kpi .num { font-size: 1.4rem; font-weight: 700; }
+        .controls-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .quick { display:flex; gap:6px; }
+        .table { width:100%; border-collapse: collapse; }
+        .table th, .table td { border-bottom:1px solid #eee; padding:8px; text-align:left; }
+    </style>
+    </head>
+<body class="soft-bg">
+    <header class="site-header">
+        <div class="header-inner">
+            <a th:href="@{/canteens}" class="btn action back-btn">Back</a>
+            <h1 class="app-title">Food Log <span id="page-canteen-name"></span></h1>
+            <div></div>
         </div>
+    </header>
+    <main class="layout">
+        <div class="content" id="food-log-section">
+            <section class="card">
+                <div class="kpis">
+                    <div class="kpi">
+                        <div>Total Produced</div>
+                        <div class="num" id="total-produced">0</div>
+                    </div>
+                    <div class="kpi">
+                        <div>Total Sold</div>
+                        <div class="num" id="total-sold">0</div>
+                    </div>
+                    <div class="kpi">
+                        <div>Total Revenue (₹)</div>
+                        <div class="num" id="total-revenue">0.00</div>
+                    </div>
+                </div>
+            </section>
 
-        <div class="food-log-forms">
-            <div id="morning-log">
-                <h3>Morning</h3>
-                <form id="morning-purchase-form">
-                    <input type="number" id="morning-purchase-plates" placeholder="Plates to Purchase" min="1" required>
-                    <button type="submit">Record Purchase</button>
-                </form>
-                <form id="morning-sale-form">
-                    <input type="number" id="morning-sale-plates" placeholder="Plates to Sell" min="1" required>
-                    <button type="submit">Record Sale</button>
-                </form>
-            </div>
-            <div id="afternoon-log">
-                <h3>Afternoon</h3>
-                <form id="afternoon-purchase-form">
-                    <input type="number" id="afternoon-purchase-plates" placeholder="Plates to Purchase" min="1" required>
-                    <button type="submit">Record Purchase</button>
-                </form>
-                <form id="afternoon-sale-form">
-                    <input type="number" id="afternoon-sale-plates" placeholder="Plates to Sell" min="1" required>
-                    <button type="submit">Record Sale</button>
-                </form>
-            </div>
-            <div id="evening-log">
-                <h3>Evening</h3>
-                <form id="evening-purchase-form">
-                    <input type="number" id="evening-purchase-plates" placeholder="Plates to Purchase" min="1" required>
-                    <button type="submit">Record Purchase</button>
-                </form>
-                <form id="evening-sale-form">
-                    <input type="number" id="evening-sale-plates" placeholder="Plates to Sell" min="1" required>
-                    <button type="submit">Record Sale</button>
-                </form>
-            </div>
+            <section class="card">
+                <h3>Quick Entry</h3>
+                <div class="grid-2">
+                    <div>
+                        <label>Meal</label>
+                        <select id="meal-type">
+                            <option value="MORNING">Morning</option>
+                            <option value="AFTERNOON">Afternoon</option>
+                              <option value="NIGHT">Evening</option>
+                        </select>
+                    </div>
+                    <div></div>
+
+                    <div>
+                        <label>Plates Produced</label>
+                        <div class="controls-row">
+                            <input id="plates-produced" type="number" min="1" placeholder="e.g. 50" />
+                            <div class="quick">
+                                <button type="button" class="btn" data-add-target="#plates-produced" data-add="10">+10</button>
+                                <button type="button" class="btn" data-add-target="#plates-produced" data-add="50">+50</button>
+                            </div>
+                            <button id="add-produced-btn" type="button" class="btn action">Add</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label>Plates Sold</label>
+                        <div class="controls-row">
+                            <input id="plates-sold" type="number" min="1" placeholder="e.g. 30" />
+                            <div class="quick">
+                                <button type="button" class="btn" data-add-target="#plates-sold" data-add="10">+10</button>
+                                <button type="button" class="btn" data-add-target="#plates-sold" data-add="50">+50</button>
+                            </div>
+                            <button id="add-sold-btn" type="button" class="btn action">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Today’s Entries</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Meal</th>
+                            <th>Produced</th>
+                            <th>Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="food-log-body"><tr><td colspan="3">(loading...)</td></tr></tbody>
+                </table>
+            </section>
         </div>
-        <a href="/canteens">Back to Canteens</a>
-    </div>
-    <script src="/app.js"></script>
+    </main>
 </body>
 </html>

@@ -11,4 +11,10 @@ public interface WorkerService {
     Optional<Worker> findWorkerById(String canteenId, String workerId);
     Worker updateWorker(String canteenId, String workerId, Worker workerDetails);
     void deleteWorker(String canteenId, String workerId);
+
+    /**
+     * Assign any legacy workers (with null canteenId) to the specified canteen.
+     * Returns the number of workers updated.
+     */
+    int assignLegacyWorkersToCanteen(String canteenId);
 }

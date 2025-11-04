@@ -41,4 +41,10 @@ public class WorkerController {
     public void delete(@PathVariable String canteenId, @PathVariable String id) {
         workerService.deleteWorker(canteenId, id);
     }
+
+    // Admin utility: assign any legacy workers (with null canteenId) to this canteen
+    @PostMapping("/assign-legacy")
+    public int assignLegacy(@PathVariable String canteenId) {
+        return workerService.assignLegacyWorkersToCanteen(canteenId);
+    }
 }

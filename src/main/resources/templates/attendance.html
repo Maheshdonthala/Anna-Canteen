@@ -8,10 +8,13 @@
   <link rel="stylesheet" href="/style.css" />
   <script src="/app.js" defer></script>
 </head>
-<body>
-  <header>
-    <a th:href="@{/canteens}" class="btn action">Back</a>
-    <h1 id="canteenName">Attendance</h1>
+<body class="soft-bg">
+  <header class="site-header">
+    <div class="header-inner">
+  <a th:href="@{/canteens}" class="btn action back-btn">Back</a>
+      <h1 class="app-title" id="canteenName">Attendance</h1>
+      <button type="button" id="showWorkersBtn" class="btn">Workers</button>
+    </div>
   </header>
   <main class="layout">
     <div class="content">
@@ -54,6 +57,15 @@
 
         <div style="margin-top:12px;">Existing workers:</div>
         <div id="workerList" class="list">(loading...)</div>
+      </section>
+
+      <!-- Toggleable section to show all workers of this canteen -->
+      <section class="card" id="allWorkersSection" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <h3 style="margin:0;">All Workers</h3>
+          <button type="button" id="closeAllWorkers" class="btn">Close</button>
+        </div>
+        <div id="allWorkersList" class="list" style="margin-top:12px;">(loading...)</div>
       </section>
     </div>
   </main>

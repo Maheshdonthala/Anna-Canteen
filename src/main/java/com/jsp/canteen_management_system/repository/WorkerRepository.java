@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface WorkerRepository extends MongoRepository<Worker, String> {
     List<Worker> findByCanteenId(String canteenId);
+    List<Worker> findByCanteenIdIsNull();
 }

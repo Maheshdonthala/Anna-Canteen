@@ -8,10 +8,13 @@
   <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}" />
   <script src="/app.js" defer></script>
 </head>
-<body>
-  <header class="site-header">
+<body class="canteens-page">
+  <header class="site-header canteens-header">
     <div class="header-inner">
-      <h1 class="app-title">Canteens</h1>
+      <div class="brand">
+  <img th:src="@{/img/logo.jpg}" src="/img/logo.jpg" alt="Anna Canteen Logo" class="brand-logo" />
+        <h1 class="app-title canteens-title">Anna Canteen Management</h1>
+      </div>
       <div class="user-greeting">Welcome</div>
     </div>
   </header>

@@ -59,6 +59,51 @@ if (document.getElementById('attendanceForm')) {
     } catch (err) { console.warn('failed loading worker management', err); }
   }
 
+  // Render simple read-only list of all workers (for the Workers button)
+  async function renderAllWorkersList() {
+    const container = document.getElementById('allWorkersList');
+    if (!container) return;
+    try {
+      container.textContent = '(loading...)';
+      const res = await fetch(`/api/canteen/${canteenId}/workers`);
+      if (!res.ok) { container.textContent = '(failed to load)'; return; }
+      const list = await res.json();
+      if (!Array.isArray(list) || list.length === 0) {
+        container.innerHTML = '(no workers) ';
+        const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = 'Import legacy workers here';
+        btn.addEventListener('click', async () => {
+          try {
+            const csrf = await getCsrf();
+            const headers = {};
+            if (csrf.token && csrf.header) headers[csrf.header] = csrf.token;
+            const r = await fetch(`/api/canteen/${canteenId}/workers/assign-legacy`, { method: 'POST', headers });
+            if (r.ok) {
+              const count = await r.json().catch(() => 0);
+              alert(`Assigned ${count} worker(s) to this canteen.`);
+              renderAllWorkersList();
+              // also refresh the management list
+              if (typeof renderWorkerManagement === 'function') renderWorkerManagement();
+            } else {
+              alert('Assignment failed: ' + r.status);
+            }
+          } catch (e) { console.error(e); alert('Assignment failed'); }
+        });
+        container.appendChild(btn);
+        return;
+      }
+      container.innerHTML = '';
+      list.forEach(w => {
+        const row = document.createElement('div'); row.className = 'list-row';
+        const left = document.createElement('div'); left.textContent = (w.name || '') + (w.role ? ' — ' + w.role : '');
+        row.appendChild(left);
+        container.appendChild(row);
+      });
+    } catch (err) {
+      console.warn('failed loading all workers', err);
+      container.textContent = '(failed to load)';
+    }
+  }
+
   // worker form handlers
   if (document.getElementById('workerForm')) {
     document.getElementById('workerForm').addEventListener('submit', async (e) => {
@@ -114,6 +159,23 @@ if (document.getElementById('attendanceForm')) {
   loadWorkers();
   loadAttendanceList();
 
+  // Workers button toggle behavior
+  const workersBtn = document.getElementById('showWorkersBtn');
+  const allWorkersSection = document.getElementById('allWorkersSection');
+  const closeAllWorkers = document.getElementById('closeAllWorkers');
+  if (workersBtn && allWorkersSection) {
+    workersBtn.addEventListener('click', () => {
+      allWorkersSection.style.display = '';
+      renderAllWorkersList();
+      workersBtn.blur();
+    });
+  }
+  if (closeAllWorkers && allWorkersSection) {
+    closeAllWorkers.addEventListener('click', () => {
+      allWorkersSection.style.display = 'none';
+    });
+  }
+
   document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const workerId = document.getElementById('workerSelect').value;
@@ -125,6 +187,10 @@ if (document.getElementById('attendanceForm')) {
     if (res.ok) {
       alert('Attendance recorded');
       loadAttendanceList();
+      // Also refresh the existing workers list so it's always up-to-date
+      if (typeof renderWorkerManagement === 'function') {
+        renderWorkerManagement();
+      }
     } else {
       alert('Failed: '+res.status);
     }
@@ -206,21 +272,46 @@ if (document.getElementById('canteenList')) {
     const cards = document.getElementById('canteensCards');
     if (cards) cards.innerHTML = '';
     list.forEach((c, idx) => {
-      // sidebar numbered button
-      const btn = document.createElement('a');
-      btn.className = 'canteen-btn';
-      btn.href = `/canteen/${c.id}`;
-      btn.innerHTML = `<span class="label"><span class="num">${idx+1}</span><span>${c.name}</span></span><span>Open</span>`;
-      sidebar.appendChild(btn);
-
+  // sidebar numbered button (centered text, no trailing 'Open')
+  const btn = document.createElement('a');
+  btn.className = 'canteen-btn';
+  btn.href = `/canteen/${c.id}`;
+  btn.innerHTML = `<span class="label"><span class="num">${idx+1}</span><span>${c.name}</span></span>`;
+  sidebar.appendChild(btn);
+        btn.innerHTML = `<span class="label"><span class="name">${c.name}</span></span>`;
       // cards grid
       if (cards) {
         const card = document.createElement('div'); card.className = 'card';
         const h = document.createElement('h3'); h.textContent = c.name;
         const p = document.createElement('p'); p.textContent = c.location;
-        const a = document.createElement('a'); a.className = 'btn action'; a.href = `/canteen/${c.id}`; a.textContent = 'Open';
-        // delete button
-        const del = document.createElement('button'); del.className = 'btn'; del.textContent = 'Delete';
+  const a = document.createElement('button');
+  a.className = 'btn';
+  a.textContent = 'Open';
+  a.addEventListener('click', () => { window.location.href = `/canteen/${c.id}`; });
+        // edit button
+        const editBtn = document.createElement('button'); editBtn.className = 'btn'; editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', async () => {
+          // simple prompt-based edit
+          const newName = prompt('Canteen name:', c.name);
+          if (newName === null) return; // cancelled
+          const newLocation = prompt('Location:', c.location || '');
+          if (newLocation === null) return;
+          const currentPrice = (typeof c.defaultPlatePrice === 'number') ? c.defaultPlatePrice : 5.0;
+          const newPriceStr = prompt('Default plate price:', String(currentPrice));
+          if (newPriceStr === null) return;
+          const newPrice = parseFloat(newPriceStr);
+          if (Number.isNaN(newPrice) || newPrice < 0) { alert('Invalid price'); return; }
+          try {
+            const csrf = await getCsrf();
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrf.token && csrf.header) headers[csrf.header] = csrf.token;
+            const res = await fetch('/api/canteens/' + c.id, { method: 'PUT', headers, body: JSON.stringify({ name: newName, location: newLocation, defaultPlatePrice: newPrice }) });
+            if (res.ok) { loadCanteens(); } else { alert('Update failed: ' + res.status); }
+          } catch (err) { console.error('update failed', err); alert('Update failed'); }
+        });
+
+  // delete button
+  const del = document.createElement('button'); del.className = 'btn action'; del.textContent = 'Delete';
         del.addEventListener('click', async () => {
           if (!confirm('Delete canteen "' + c.name + '"?')) return;
           try {
@@ -231,7 +322,15 @@ if (document.getElementById('canteenList')) {
             if (res.ok) { loadCanteens(); } else { alert('Delete failed: ' + res.status); }
           } catch (err) { console.error('delete failed', err); alert('Delete failed'); }
         });
-        card.appendChild(h); card.appendChild(p); card.appendChild(a); card.appendChild(document.createTextNode(' ')); card.appendChild(del);
+        // group action buttons with spacing
+        const actions = document.createElement('div');
+        actions.className = 'btn-row';
+        actions.appendChild(a);
+        actions.appendChild(editBtn);
+        actions.appendChild(del);
+        card.appendChild(h);
+        card.appendChild(p);
+        card.appendChild(actions);
         cards.appendChild(card);
       }
     });
@@ -353,6 +452,18 @@ if (document.getElementById('food-log-section')) {
   const totalRevenueSpan = document.getElementById('total-revenue');
   const foodLogBody = document.getElementById('food-log-body');
 
+  // Populate canteen name in header if element is present
+  (async () => {
+    try {
+      const res = await fetch(`/api/canteens/${canteenId}`);
+      if (res.ok) {
+        const canteen = await res.json();
+        const nameEl = document.getElementById('page-canteen-name');
+        if (nameEl) nameEl.textContent = `— ${canteen.name}`;
+      }
+    } catch (_) { /* ignore */ }
+  })();
+
   async function fetchFoodLogs() {
     try {
       const response = await fetch(`/api/canteens/${canteenId}/foodlogs`);
@@ -378,9 +489,10 @@ if (document.getElementById('food-log-section')) {
   function renderFoodLogTable(foodLogs) {
     foodLogBody.innerHTML = '';
     foodLogs.forEach(log => {
+      const mealLabel = (log.mealType === 'NIGHT') ? 'EVENING' : log.mealType;
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${log.mealType}</td>
+        <td>${mealLabel}</td>
         <td>${log.platesProduced}</td>
         <td>${log.platesSold}</td>
       `;
@@ -435,6 +547,20 @@ if (document.getElementById('food-log-section')) {
 
   addProducedBtn.addEventListener('click', () => handleAdd('produced'));
   addSoldBtn.addEventListener('click', () => handleAdd('sold'));
+
+  // Quick-add increment buttons for inputs
+  document.querySelectorAll('[data-add-target][data-add]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sel = btn.getAttribute('data-add-target');
+      const inc = parseInt(btn.getAttribute('data-add') || '0', 10) || 0;
+      const input = document.querySelector(sel);
+      if (!input) return;
+      const cur = parseInt(input.value || '0', 10) || 0;
+      const next = Math.max(0, cur + inc);
+      input.value = String(next);
+      input.focus();
+    });
+  });
 
   // Initial load
   fetchFoodLogs();

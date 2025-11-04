@@ -3,7 +3,9 @@ package com.jsp.canteen_management_system.controller;
 import com.jsp.canteen_management_system.model.Canteen;
 import com.jsp.canteen_management_system.service.CanteenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
@@ -28,10 +30,14 @@ public class CanteenController {
     // GET single canteen by id
     @GetMapping("/{id}")
     public Canteen getCanteenById(@PathVariable String id) {
-        return canteenService.getAllCanteens().stream()
-                .filter(c -> c.getId() != null && c.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Canteen not found"));
+        return canteenService.getById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Canteen not found"));
+    }
+
+    // PUT canteen by id (update)
+    @PutMapping("/{id}")
+    public Canteen updateCanteen(@PathVariable String id, @RequestBody Canteen payload) {
+        return canteenService.updateCanteen(id, payload);
     }
 
     // DELETE canteen by id
