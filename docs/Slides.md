@@ -44,6 +44,22 @@ Dockerized • Render‑ready • Daily food summaries
 
 ---
 
+## UI: Canteens Page
+
+![Canteens page screenshot](img/canteens.png)
+
+Tip: Save a screenshot as `docs/img/canteens.png` to render here. Include the header/logo and the cards.
+
+---
+
+## UI: Food Log Daily Summary
+
+![Food Log daily summary screenshot](img/foodlog_summary.png)
+
+Tip: Save a screenshot as `docs/img/foodlog_summary.png` highlighting quick entry and daily summary.
+
+---
+
 ## Data Model
 
 - Documents: Worker, Canteen, FoodLogEntry
