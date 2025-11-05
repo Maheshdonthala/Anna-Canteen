@@ -1,5 +1,11 @@
 $ErrorActionPreference = 'Stop'
-$env:SPRING_DATA_MONGODB_URI = 'mongodb+srv://donthalamahesh12_db_user:admin@cluster0.rjiytn3.mongodb.net/canteenDB?retryWrites=true&w=majority'
+# NOTE: Do not hardcode secrets here. Ensure SPRING_DATA_MONGODB_URI is set in your environment
+# before running this script, for example:
+#   $env:SPRING_DATA_MONGODB_URI = 'mongodb+srv://<user>:<pass>@<cluster>/canteenDB?retryWrites=true&w=majority'
+if (-not $env:SPRING_DATA_MONGODB_URI) {
+    Write-Error "SPRING_DATA_MONGODB_URI is not set. Please set it in this PowerShell session or use Docker/Render env vars."
+    exit 1
+}
 Write-Output "Starting Spring Boot (mvnw spring-boot:run) as background process..."
 $proc = Start-Process -FilePath '.\mvnw.cmd' -ArgumentList 'spring-boot:run' -NoNewWindow -PassThru -WorkingDirectory (Get-Location)
 Write-Output "PID: $($proc.Id)"
